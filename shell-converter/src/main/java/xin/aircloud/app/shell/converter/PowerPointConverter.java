@@ -19,6 +19,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @ShellComponent(value = "Convert the snapshot of pptx/ppt to png. Type help for more infomation.")
 public class PowerPointConverter {
@@ -97,20 +98,27 @@ public class PowerPointConverter {
             print("The space between cols should be in 0...60");
         }
 
+        AtomicInteger count = new AtomicInteger(0);
         File targetFolder = new File(folder);
-        File[] files = targetFolder.listFiles();
+        print("\nProcessing");
+        folderRecursive(targetFolder, colsCount, spaceNum, count);
+        print("\nJob Done");
+    }
+
+    protected void folderRecursive(File folder, int colsCount, int spaceNum, AtomicInteger count) throws Exception{
+        File[] files = folder.listFiles();
         int filesCount = files.length;
-        print("\nbegin processing");
-        int count = 0;
         for (int i = 0; i < filesCount; i++) {
             File file = files[i];
-            if (checkPPTxExtension(file.getName())){
-                process(file.getAbsolutePath(), colsCount, spaceNum);
-                print("\n" + (++count) + "  " + file.getName() +" completed");
+            if (file.isFile()) {
+                if (checkPPTxExtension(file.getName())){
+                    process(file.getAbsolutePath(), colsCount, spaceNum);
+                    print("\n" + count.addAndGet(1) + "  " + file.getName() +" completed");
+                }
+            } else if (file.isDirectory()){
+                folderRecursive(file, colsCount, spaceNum, count);
             }
         }
-
-        print("\nJob Done");
     }
 
     /**
