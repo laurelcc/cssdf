@@ -19,8 +19,9 @@ import java.util.Locale;
 public class MainApp {
 
     public static void main(String[] args){
+
         try {
-            Path filePath = Paths.get("/Users/soong/Documents/BaiDuYun/精品版1000套/不同风格209套/IOS 风格22套/精-IOS9-素材派.pptx");
+            Path filePath = Paths.get("/Users/hsoong/Desktop/PPTGROUP/[005]毕业答辩PPT模板[-吴焱鑫].ppt");
             File file = new File(filePath.toUri());
             if (file.exists() && file.isFile()){
                 SlideShow<?,?> ss = SlideShowFactory.create(file, null, true);
