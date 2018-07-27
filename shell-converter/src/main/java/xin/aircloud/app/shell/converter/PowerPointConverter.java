@@ -244,8 +244,8 @@ public class PowerPointConverter {
             AffineTransform transform = new AffineTransform();
             int wih = waterImg.getHeight();
             int wiw = waterImg.getWidth();
-            int waterRows = (int) (Math.floor(fullImg.getHeight() / wih));
-            int waterCols = (int) (Math.floor(fullImg.getWidth() / wiw));
+            int waterRows = (int) (Math.ceil(fullImg.getHeight() / wih)) + 1;
+            int waterCols = (int) (Math.ceil(fullImg.getWidth() / wiw)) + 1;
             for (int i = 0; i < waterRows; i++){
                 for (int j = 0; j < waterCols; j++){
                     int ty = i * wih;
