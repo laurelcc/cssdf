@@ -13,7 +13,9 @@ import org.springframework.util.StringUtils;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -27,10 +29,10 @@ public class PowerPointConverter {
     private static Logger logger = LoggerFactory.getLogger(PowerPointConverter.class);
 
     @ShellMethod(value = "snapshots of ppt/pptx to png", key = "ppt2png", group = "PPTx to PNG Converter")
-    public void convertSingleFile(@ShellOption(value = "file", defaultValue = "") String file,
-                                  @ShellOption(value = "cols", defaultValue = "3") int cols,
-                                  @ShellOption(value = "space", defaultValue = "0") int space,
-                                  @ShellOption(value = "water", defaultValue = "") String warter) throws Exception{
+    public void convertSingleFile(@ShellOption(value = "--file", defaultValue = "") String file,
+                                  @ShellOption(value = "--cols", defaultValue = "3") int cols,
+                                  @ShellOption(value = "--space", defaultValue = "0") int space,
+                                  @ShellOption(value = "--water", defaultValue = "") String water) throws Exception{
         if (StringUtils.isEmpty(file)){
             print("Please confirm the target file extension pptx or ppt");
         } else {
@@ -59,8 +61,8 @@ public class PowerPointConverter {
             print("The space between cols should be in 0...60");
         }
 
-        if (!StringUtils.isEmpty(warter)){
-            Path filePath = Paths.get(warter);
+        if (!StringUtils.isEmpty(water)){
+            Path filePath = Paths.get(water);
             File targetFile = new File(filePath.toUri());
             if (!targetFile.exists()){
                 print("The wartermark file dose not exists");
@@ -69,43 +71,57 @@ public class PowerPointConverter {
 
         print("\nprocessing...");
 
-        process(file, colsCount, spaceNum);
+        process(file, colsCount, spaceNum, water);
 
         print("\nJob Done");
     }
 
     @ShellMethod(value = "batch convert ppt/pptx to png", key = "ppt2png-batch", group = "PPTx to PNG Converter")
-    public void batchConvertFiles(@ShellOption(value = "folder", defaultValue = "") String folder,
-                                  @ShellOption(value = "cols", defaultValue = "3") int cols,
-                                  @ShellOption(value = "space", defaultValue = "0") int space) throws Exception {
+    public void batchConvertFiles(@ShellOption(value = "--folder", defaultValue = "") String folder,
+                                  @ShellOption(value = "--cols", defaultValue = "3") int cols,
+                                  @ShellOption(value = "--space", defaultValue = "0") int space,
+                                  @ShellOption(value = "--water", defaultValue = "") String water) throws Exception {
         if (StringUtils.isEmpty(folder)){
             print("Please confirm the target folder");
+            return;
         } else {
             Path filePath = Paths.get(folder);
             File targetFile = new File(filePath.toUri());
             if (!targetFile.exists()){
                 print("The PPTx folder dose not exists");
+                return;
+            }
+        }
+
+        if (!StringUtils.isEmpty(water)){
+            Path warterPath = Paths.get(water);
+            File warterFile = new File(warterPath.toUri());
+            if (!warterFile.exists()){
+                print("The watermarks file dose not exists");
+                return;
             }
         }
 
         int colsCount = cols;
         if (cols < 0 || cols > 12) {
             print("The cols should be in 1...12");
+            return;
         }
 
         int spaceNum = space;
         if (space < 0 || space > 60) {
             print("The space between cols should be in 0...60");
+            return;
         }
 
         AtomicInteger count = new AtomicInteger(0);
         File targetFolder = new File(folder);
         print("\nProcessing");
-        folderRecursive(targetFolder, colsCount, spaceNum, count);
+        folderRecursive(targetFolder, colsCount, spaceNum, count, water);
         print("\nJob Done");
     }
 
-    protected void folderRecursive(File folder, int colsCount, int spaceNum, AtomicInteger count) throws Exception{
+    protected void folderRecursive(File folder, int colsCount, int spaceNum, AtomicInteger count, String watermarks) throws Exception{
         File[] files = folder.listFiles();
         int filesCount = files.length;
         for (int i = 0; i < filesCount; i++) {
@@ -113,14 +129,14 @@ public class PowerPointConverter {
             if (file.isFile()) {
                 if (checkPPTxExtension(file.getName())){
                     try {
-                        process(file.getAbsolutePath(), colsCount, spaceNum);
+                        process(file.getAbsolutePath(), colsCount, spaceNum, watermarks);
                         print("\n" + count.addAndGet(1) + "  " + file.getName() +" completed");
                     } catch (Exception e){
                         print("\n" + file.getName() + " " + e.getMessage());
                     }
                 }
             } else if (file.isDirectory()){
-                folderRecursive(file, colsCount, spaceNum, count);
+                folderRecursive(file, colsCount, spaceNum, count, watermarks);
             }
         }
     }
@@ -132,7 +148,7 @@ public class PowerPointConverter {
      * @param spaceNum
      * @throws Exception
      */
-    protected void process(String file, int colsCount, int spaceNum) throws Exception{
+    protected void process(String file, int colsCount, int spaceNum, String watermarks) throws Exception{
         Path filePath = Paths.get(file);
         File pptx = new File(filePath.toUri());
         SlideShow<?,?> shows = SlideShowFactory.create(pptx, null, true);
@@ -170,6 +186,18 @@ public class PowerPointConverter {
         fullGraphics.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_OFF);
 
         BufferedImage slideImage = null;
+
+        // 画水印
+        BufferedImage waterImg = null;
+        if (!StringUtils.isEmpty(watermarks)){
+            File waterFile = new File(watermarks);
+            boolean isImgExtension = waterFile.getName().endsWith("png") ||
+                    waterFile.getName().endsWith("jpg") ||
+                    waterFile.getName().endsWith("jpeg");
+            if (waterFile.exists() && isImgExtension){
+                waterImg = ImageIO.read(waterFile);
+            }
+        }
 
         for (int i = 0; i < slidesSize; i++){
             Slide<?,?> slide = slides.get(i);
@@ -209,6 +237,24 @@ public class PowerPointConverter {
 
             slideGraphic.dispose();
             slideImage.flush();
+        }
+
+        // 在整张图上画水印
+        if (waterImg != null){
+            AffineTransform transform = new AffineTransform();
+            int wih = waterImg.getHeight();
+            int wiw = waterImg.getWidth();
+            int waterRows = (int) (Math.floor(fullImg.getHeight() / wih));
+            int waterCols = (int) (Math.floor(fullImg.getWidth() / wiw));
+            for (int i = 0; i < waterRows; i++){
+                for (int j = 0; j < waterCols; j++){
+                    int ty = i * wih;
+                    int tx = j * wiw;
+                    transform.setToTranslation(tx, ty);
+
+                    fullGraphics.drawImage(waterImg, transform, null);
+                }
+            }
         }
 
         String format = "png";
