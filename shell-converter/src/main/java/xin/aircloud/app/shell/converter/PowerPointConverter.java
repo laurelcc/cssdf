@@ -79,7 +79,7 @@ public class PowerPointConverter {
     @ShellMethod(value = "batch convert ppt/pptx to png", key = "ppt2png-batch", group = "PPTx to PNG Converter")
     public void batchConvertFiles(@ShellOption(value = "--folder", defaultValue = "") String folder,
                                   @ShellOption(value = "--cols", defaultValue = "3") int cols,
-                                  @ShellOption(value = "--space", defaultValue = "0") int space,
+                                  @ShellOption(value = "--space", defaultValue = "8") int space,
                                   @ShellOption(value = "--water", defaultValue = "") String water) throws Exception {
         if (StringUtils.isEmpty(folder)){
             print("Please confirm the target folder");
