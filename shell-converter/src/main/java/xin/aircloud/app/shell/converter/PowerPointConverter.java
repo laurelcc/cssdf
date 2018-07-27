@@ -154,7 +154,6 @@ public class PowerPointConverter {
         SlideShow<?,?> shows = SlideShowFactory.create(pptx, null, true);
         List<? extends Slide<?,?>> slides = shows.getSlides();
         int slidesSize = slides.size();
-
         Dimension pgsize = shows.getPageSize();
         int width = (int) (pgsize.width);
         int height = (int) (pgsize.height);
@@ -244,8 +243,8 @@ public class PowerPointConverter {
             AffineTransform transform = new AffineTransform();
             int wih = waterImg.getHeight();
             int wiw = waterImg.getWidth();
-            int waterRows = (int) (Math.ceil(fullImg.getHeight() / wih)) + 1;
-            int waterCols = (int) (Math.ceil(fullImg.getWidth() / wiw)) + 1;
+            int waterRows = (int) (Math.ceil(fullImg.getHeight() / wih)) + 2;
+            int waterCols = (int) (Math.ceil(fullImg.getWidth() / wiw)) + 2;
             for (int i = 0; i < waterRows; i++){
                 for (int j = 0; j < waterCols; j++){
                     int ty = i * wih;
