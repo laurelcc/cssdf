@@ -259,7 +259,13 @@ public class PowerPointConverter {
         String format = "png";
         String outname = pptx.getName().replaceFirst(".pptx?", "");
         outname = String.format(Locale.ROOT, "%1$s-%2$s.%3$s", outname, "预览", format);
-        File outfile = new File(pptx.getParent(), outname);
+
+        File imgFolder = new File(pptx.getParent(), "预览图");
+        if (!imgFolder.exists()){
+            imgFolder.mkdirs();
+        }
+
+        File outfile = new File(imgFolder, outname);
         ImageIO.write(fullImg, format, outfile);
 
         fullGraphics.dispose();
