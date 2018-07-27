@@ -112,8 +112,12 @@ public class PowerPointConverter {
             File file = files[i];
             if (file.isFile()) {
                 if (checkPPTxExtension(file.getName())){
-                    process(file.getAbsolutePath(), colsCount, spaceNum);
-                    print("\n" + count.addAndGet(1) + "  " + file.getName() +" completed");
+                    try {
+                        process(file.getAbsolutePath(), colsCount, spaceNum);
+                        print("\n" + count.addAndGet(1) + "  " + file.getName() +" completed");
+                    } catch (Exception e){
+                        print("\n" + file.getName() + " " + e.getMessage());
+                    }
                 }
             } else if (file.isDirectory()){
                 folderRecursive(file, colsCount, spaceNum, count);
@@ -160,10 +164,10 @@ public class PowerPointConverter {
         fullGraphics.fillRect(0, 0, imgFullWidth, imgFullHeight);
 
         // default rendering options
-        fullGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        fullGraphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        fullGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+        fullGraphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
         fullGraphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-        fullGraphics.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+        fullGraphics.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_OFF);
 
         BufferedImage slideImage = null;
 
@@ -178,10 +182,10 @@ public class PowerPointConverter {
             Graphics2D slideGraphic = slideImage.createGraphics();
             DrawFactory.getInstance(slideGraphic).fixFonts(slideGraphic);
 
-            slideGraphic.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            slideGraphic.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+            slideGraphic.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+            slideGraphic.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
             slideGraphic.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-            slideGraphic.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+            slideGraphic.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_OFF);
 
             if (i == 0){
                 slideGraphic.scale(1, 1);
@@ -211,7 +215,7 @@ public class PowerPointConverter {
         String outname = pptx.getName().replaceFirst(".pptx?", "");
         outname = String.format(Locale.ROOT, "%1$s-%2$s.%3$s", outname, "预览", format);
         File outfile = new File(pptx.getParent(), outname);
-        ImageIO.write(fullImg, "png", outfile);
+        ImageIO.write(fullImg, format, outfile);
 
         fullGraphics.dispose();
         fullImg.flush();
