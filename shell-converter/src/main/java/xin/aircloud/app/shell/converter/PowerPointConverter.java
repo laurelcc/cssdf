@@ -235,18 +235,4 @@ public class PowerPointConverter {
         System.out.println(message);
     }
 
-
-//    @Component
-//    public class TabValueProvider extends ValueProviderSupport {
-//        private final String[] VALUES = new String[] {
-//                "hello world",
-//                "I'm quoting \"The Daily Mail\"",
-//                "10 \\ 3 = 3"
-//        };
-//
-//        @Override
-//        public List<CompletionProposal> complete(MethodParameter parameter, CompletionContext completionContext, String[] hints) {
-//            return Arrays.stream(VALUES).map(CompletionProposal::new).collect(Collectors.toList());
-//        }
-//    }
 }
